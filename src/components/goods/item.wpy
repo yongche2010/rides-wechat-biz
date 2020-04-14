@@ -1,0 +1,85 @@
+<template>
+  <view class="item-box column" @tap="edit({{goods.id}})">
+    <view class="goods-box row">
+      <image class="goods-image" src="{{goods.imageUrl}}" />
+      <view class="info-box column">
+        <view class="title-box">
+          <text class="title">{{goods.name}}</text>
+        </view>
+        <view class="price-box row">
+          <text class="major lg">{{goods.priceText}}</text>
+          <text class="muted xs ml10" wx:if="{{goods.skuCount > 0}}">[{{goods.skuCount}}规格]</text>
+        </view>
+      </view>
+    </view>
+    <view class="row-between mt10">
+      <text class="muted mr20 xs">库存：{{goods.totalStock}}</text>
+      <text class="muted mr20 xs">销量：{{goods.salesVolume}}</text>
+      <text class="muted mr20 xs">收藏：{{goods.favoriteCount}}</text>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  export default class GoodsItem extends wepy.component {
+    props = {
+      goods: {}
+    };
+    data = {};
+    methods = {
+      async edit(goodsId) {
+        this.$root.$navigate('edit', {goodsId, mode: 'edit'});
+      }
+    };
+  }
+</script>
+
+<style lang="scss">
+  @import "../../styles/variable";
+  .item-box{
+    background-color: #FFF;
+    position: relative;
+    border-bottom: $border;
+    padding: 10rpx;
+    .item-action{
+      border-top: $border;
+      height: 90rpx;
+    }
+
+    .goods-box{
+      padding-bottom: 10rpx;
+      border-bottom: 1px dashed #dfdfdf;
+      $image-size: 130rpx;
+
+      .goods-image{
+        height: $image-size;
+        width: $image-size;
+        border: $border;
+        border-radius: 8px;
+      }
+      .icon-recommend{
+        position: absolute;
+        height: 25px;
+        width: 25px;
+        right: 10rpx;
+        top: 0;
+      }
+
+      .price-box{
+        align-items: flex-end;
+      }
+
+      .info-box{
+        justify-content: space-between;
+        height: $image-size;
+        flex: 1;
+        margin-left: 20rpx;
+
+        .title{
+          line-height: 30rpx;
+        }
+      }
+    }
+  }
+</style>

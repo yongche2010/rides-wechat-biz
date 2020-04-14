@@ -1,0 +1,147 @@
+<template>
+  <view class="container" wx:if="{{init}}">
+    <!--TAB 页-->
+    <ZanTab :tab="tab" fixed="0" @change.user="change"/>
+
+    <!--主内容区域-->
+    <view class="main-box row">
+      <!--分类侧边栏-->
+      <SideTab :tab.sync="categories" @change.user="switchTab" />
+      <!--右侧滚动-->
+      <scroll-view scroll-y class="goods-box" bindscrolltolower="onReachBottom">
+        <!--分类名称-->
+        <view class="goods-title row">
+          <text class="weak">{{selectedCategoryName}}</text>
+        </view>
+        <!--商品列表-->
+        <view class="goods-list">
+          <repeat for="{{page.list}}" key="index" index="index" item="item">
+            <GoodsItem :goods.sync="item"/>
+          </repeat>
+        </view>
+        <Loadmore :page.sync="page" emptyText="暂无商品"/>
+      </scroll-view>
+    </view>
+    <!--操作栏-->
+    <ActionBar @tap.user="add" okText="新增商品" cancelText="返回" />
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import base from '../../mixins/base';
+  import pagination from '../../mixins/pagination';
+  import goods from '../../api/goods';
+  import GoodsItem from '../../components/goods/item';
+  import ZanTab from '../../components/zanui/tab';
+  import SideTab from '../../components/manusl/side_tab';
+  import ActionBar from '../../components/common/action_bar';
+  import Placeholder from '../../components/common/placeholder';
+  import Loadmore from '../../components/weui/loadmore';
+  import Event from '../../utils/Event';
+  import mausl from '../../api/mausl';
+  export default class GoodsList extends wepy.page {
+    def = {
+      init: false,
+      page: {
+        list: []
+      },
+      tab: {
+        list: [
+          {id: 'onSale', title: '出售中'},
+          {id: 'sellOut', title: '售罄的'},
+          {id: 'offSale', title: '仓库中'}
+        ],
+        selectedId: 'onSale',
+        scroll: false
+      },
+      categories: []
+    };
+    data = {...this.def};
+    async onLoad () {
+      this.page = goods.list(this);
+      this.goods = this.page.list;
+      await this.updateCategories();
+      await this.next();
+      Event.listen(Event.GOODS_LIST_UPDATE, this.update.bind(this), this);
+      Event.listen(Event.CATEGORY_LIST_UPDATE, this.updateCategories.bind(this), this);
+      this.loaded();
+    };
+    // 获取分页参数
+    params() {
+      return {
+        goods_status: this.tab.selectedId,
+        category_id: this.categories.selectedId
+      };
+    }
+    // 更新分类
+    async updateCategories() {
+      // 加载商品分类
+      this.categories = await mausl.categories();
+      if (this.categories && this.categories.list && this.categories.list.length > 0) {
+        this.categories.selectedId = this.categories.list[0].id;
+      }
+      this.loaded();
+    }
+    methods = {
+      // 点击分类
+      switchTab(selectedId) {
+        this.tab.categoryId = selectedId;
+        this.reload();
+      },
+      add() {
+        this.$navigate(`edit?mode=create&categoryId=${this.categories.selectedId}`);
+      },
+      change() {
+        this.reload();
+      }
+    };
+    computed = {
+      selectedCategoryName() {
+        if (this.init && this.categories && this.categories.list && this.categories.list.length > 0) {
+          const selectedId = this.categories.selectedId;
+          const selectedCategory = this.categories.list.find(item => item.id == selectedId);
+          return selectedCategory ? selectedCategory.title : null;
+        }
+      }
+    };
+    events = {};
+    components = {
+      ZanTab: ZanTab,
+      Placeholder: Placeholder,
+      GoodsItem: GoodsItem,
+      ActionBar: ActionBar,
+      Loadmore: Loadmore,
+      SideTab: SideTab
+    };
+    mixins = [base, pagination];
+    config = {
+      navigationBarTitleText: '商品管理',
+      enablePullDownRefresh: true
+    };
+  }
+</script>
+
+<style lang="scss">
+  @import "../../styles/variable";
+  .main-box{
+    width: 100%;
+    position: absolute;
+    top: 43px;
+    bottom: 55px;
+
+    .goods-box{
+      flex: 1;
+      height: 100%;
+      .goods-title{
+        height: 30px;
+        padding-left: 20rpx;
+        align-items: center;
+        border-bottom: $border;
+      }
+      .goods-list{
+        background-color: #FFF;
+      }
+    }
+  }
+</style>

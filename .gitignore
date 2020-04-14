@@ -1,18 +1,10 @@
-*.log*
-.cache
-.DS_Store
-.idea
-.vscode
-
-# npm 
-node_modules
-package-lock.json
-
-# dist file
-es
-lib
-dist
-/site
-changelog.generated.md
-test/coverage
-vetur
+node_modules/*
+dist/*
+.idea/*
+/.editorconfig
+/.eslintignore
+/.npmignore
+/.wepycache
+/.wepyignore
+/package-lock.json
+/src/ext.json

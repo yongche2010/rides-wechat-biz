@@ -1,0 +1,78 @@
+<template>
+  <view class="container" wx:if="{{init}}">
+    <Tips/>
+    <text class="xl ml30 mt10 mb10 muted">{{support}}</text>
+    <form @submit="submit">
+      <view class="weui-cells weui-cells-form">
+        <view class="weui-cell">
+          <view class="weui-cell__bd">
+          <textarea class="weui-textarea" name="context" value="{{context}}" placeholder="请输入{{support}}"
+                    style="height: 6.3em" maxlength="200"/>
+          </view>
+        </view>
+      </view>
+      <!--操作栏-->
+      <ActionPanel submitText="确定"/>
+    </form>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy';
+  import base from '../../mixins/base';
+  import input from '../../mixins/input';
+  import Event from '../../utils/Event';
+  import Tips from '../../utils/Tips';
+  import FormTips from '../../components/weui/tips';
+  import ActionPanel from '../../components/common/action_panel';
+
+  export default class Context extends wepy.page {
+    def = {
+      init: false,
+      type: '',
+      context: {}
+    };
+    data = {...this.def};
+    methods = {
+      async submit ({detail}) {
+        const param = {
+          type: this.type,
+          context: detail.value.context
+        };
+        await Tips.success('编辑完成！');
+        Event.emit(Event.SHOP_CONTEXT_UPDATE, param);
+        wepy.navigateBack();
+      }
+    };
+
+    async onLoad (options) {
+      const param = JSON.parse(options.param);
+      this.type = param.type;
+      this.context = param.context;
+      this.init = true;
+    };
+    computed = {
+      support () {
+        if (this.type == 'description') {
+          return '使用说明';
+        } else {
+          return '使用提醒';
+        }
+      }
+    };
+
+    config = {navigationBarTitleText: '内容编辑'};
+    mixins = [input, base];
+    components = {
+      ActionPanel: ActionPanel,
+      Tips: FormTips
+    };
+  }
+</script>
+<style lang="scss">
+    @import "../../styles/variable";
+
+    .ml30 {
+        margin-left: rpx(30);
+        font-weight: bold;
+    }
+</style>

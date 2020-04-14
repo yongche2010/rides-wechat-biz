@@ -1,0 +1,189 @@
+<template>
+  <view class="order-item-container column">
+    <!--基本信息-->
+    <view class="order-header-container colunm">
+
+      <view class="row-between">
+        <view class="user-info-container">
+          <image class="icon" src="/images/icons/idcard.png"  />
+          <text class="sm ml10">{{order.customer.nickName ? order.customer.nickName : '微信用户'}}</text>
+        </view>
+        <view>
+          <text class="sm primary">{{order.statusText}}</text>
+          <text class="muted danger"> {{order.paymentType == 0 ? '(线下支付)' : ''}}</text>
+        </view>
+      </view>
+
+      <view class="order-info-container row-between">
+        <text>{{order.orderTime}}</text>
+        <text>{{order.uuid}}</text>
+      </view>
+    </view>
+
+    <!--商品区域-->
+
+    <view class="order-goods-list-container" @tap="detail({{order.orderId}})">
+      <repeat for="{{order.orderGoodsInfos}}" key="goodsId" index="index" item="item">
+        <view class="{{!order.orderId || index == 0 || expand[order.orderId] ? '' : 'order-goods-fold'}}">
+          <OrderGoods :goods="item"></OrderGoods>
+          <view class="hr" />
+        </view>
+      </repeat>
+      <view wx:if="{{order.orderId && order.orderGoodsInfos.length > 1}}" class="goods-fold-btn row-center" @tap.stop="expand({{order.orderId}})">
+        <text class="muted" wx:if="{{!expand[order.orderId]}}">查看全部 {{order.orderGoodsInfos.length}} 件商品</text>
+        <text class="muted" wx:else>收起商品</text>
+      </view>
+    </view>
+
+
+    <!--汇总信息-->
+    <view class="order-footer-container row-end">
+      <text class="mr20">共{{order.orderGoodsInfos.length}}件商品</text>
+      <text>合计:</text>
+      <text class="major xl mr20">￥{{order.finalPrice}}</text>
+      <text>(含运费￥{{order.postFee}})</text>
+    </view>
+
+    <!--操作栏/可以抽取为组件-->
+    <view class="order-action-bar row-between" wx:if="{{action != 0}}">
+      <view>
+        <view class="small label primary ml20" wx:if="{{order.orderType == 20}}">外卖</view>
+        <view class="small label primary ml20" wx:if="{{order.orderType == 30}}">堂食</view>
+        <view class="small label primary ml20" wx:if="{{order.orderType == 33}}">打包</view>
+      </view>
+      <view>
+        <block wx:for="{{order.actions}}" wx:for-item="action" wx:key="index">
+          <view class="zan-btn zan-btn--small {{action.primary ? 'zan-btn--primary' : ''}}" @tap="action({{action.func}}, {{order}})">{{action.name}}</view>
+        </block>
+      </view>
+    </view>
+
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import order from '../../api/order';
+  import OrderGoods from './goods';
+  import OrderAction from './action';
+  import Tips from '../../utils/Tips';
+  import Event from '../../utils/Event';
+
+  export default class OrderItem extends wepy.component {
+    props = {
+      order: {
+        orderGoodsInfos: []
+      },
+      action: {
+        default: true
+      }
+    };
+    data = {
+      expand: {},
+      shopName: {}
+    };
+    send({orderId}) {
+      this.$root.$navigate('send', {orderId});
+    }
+    remark({orderId, sellerNote}) {
+      this.$root.$navigate('remark', {orderId, sellerNote});
+    }
+    close({orderId}) {
+      this.$root.$navigate('close', {orderId});
+    }
+    reprice({orderId}) {
+      this.$root.$navigate('reprice', {orderId});
+    }
+    receive({orderId}) {
+      this.$emit('receive', orderId);
+    }
+    refund({orderId}) {
+      this.$root.$navigate('refund', {orderId});
+    }
+    trace({orderId}) {
+      // TODO 尚未处理
+      this.$root.$navigate('trace', {orderId});
+    }
+    async take({orderId}) {
+      await Tips.confirm('确认接单？');
+      try {
+        await order.take(orderId);
+        await Tips.success('接单成功');
+      } catch (e) {
+        console.warn(e);
+        await Tips.success('操作失败');
+      }
+      Event.emit(Event.ORDER_LIST_UPDATE);
+    }
+    methods = {
+      action(funcName, order) {
+        console.info('[action]' + funcName);
+        if (this[funcName]) {
+          const func = this[funcName].bind(this);
+          func(order);
+        } else {
+          Tips.error('未知错误');
+        }
+      },
+      expand(orderId) {
+        orderId = orderId == null ? 0 : orderId;
+        this.expand[orderId] = !this.expand[orderId];
+      },
+      detail(orderId) {
+        this.$emit('tap', orderId);
+      }
+    };
+
+    components = {
+      OrderGoods: OrderGoods,
+      OrderAction: OrderAction
+    };
+  }
+</script>
+
+<style lang="scss">
+  @import "../../styles/variable";
+
+  .order-item-container {
+    border-top: $border;
+    border-bottom: $border;
+    background-color: #FFF;
+    margin-bottom: 10rpx;
+  }
+
+  /*顶栏*/
+  .order-header-container {
+    padding: 10rpx 25rpx 10rpx 20rpx;
+  }
+
+  /*底栏*/
+  .order-footer-container {
+    padding-left: 25rpx;
+    padding-right: 20rpx;
+    height: 70rpx;
+  }
+
+  /*顶栏订单信息*/
+  .order-info-container{
+    text{
+      font-size: $text-xs;
+      color:$color-muted;
+    }
+  }
+
+  /* 操作栏 */
+  .order-action-bar {
+    border-top: $border;
+    height: 90rpx;
+    padding-right: 10rpx;
+  }
+  .order-goods-fold{
+    display: none;
+  }
+
+  .goods-fold-btn{
+    background-color: $color-bg-item;
+    padding-top: 5rpx;
+    padding-bottom: 5rpx;
+  }
+</style>

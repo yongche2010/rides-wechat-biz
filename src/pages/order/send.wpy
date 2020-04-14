@@ -1,0 +1,201 @@
+<template>
+  <Tips />
+
+  <ExpressCompany :display.sync="selectDisplay"  @back.user="back" @selected.user="selected" />
+
+  <view class="container" wx:if="{{panelDisplay}}">
+    <!--地址展现-->
+    <Address :address.sync="address" />
+
+    <!--发货表单-->
+    <view class="weui-cells weui-cells_after-title form">
+      <view class="weui-cell weui-cell_switch">
+        <view class="weui-cell__bd">{{input.isMail ? '物流发货' : '同城配送'}}</view>
+        <view class="weui-cell__ft">
+          <switch checked="{{input.isMail}}" id="isMail" @change="input" />
+        </view>
+      </view>
+      <view class="weui-cell weui-cell_input" wx:if="{{input.isMail}}" @tap="select">
+        <view class="weui-cell__hd">
+          <view class="weui-label">快递公司</view>
+        </view>
+        <view class="weui-cell__bd">
+          <input class="weui-input" placeholder="请选择快递公司" disabled value="{{company.name}}"/>
+        </view>
+        <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+      </view>
+      <view class="weui-cell weui-cell_input" wx:if="{{input.isMail}}">
+        <view class="weui-cell__hd" >
+          <view class="weui-label">快递单号</view>
+        </view>
+        <view class="weui-cell__bd">
+          <input class="weui-input" id="mailNo" @input="input" placeholder="请输入快递单号" value="{{input.mailNo}}"/>
+        </view>
+        <view class="weui-cell__ft">
+        </view>
+      </view>
+
+      <view class="weui-cell weui-cell_input row-center express-tips" wx:if="{{!input.isMail && delivers.length < 1}}">
+        <text class="muted">尚未配置配送员</text>
+      </view>
+
+      <view class="weui-cell weui-cell_select" wx:if="{{!input.isMail && delivers.length > 0}}">
+        <view class="weui-cell__hd weui-cell__hd_in-select-after">
+          <view class="weui-label">配送员</view>
+        </view>
+        <view class="weui-cell__bd">
+          <picker @change="input" id="deliverIndex" range-key="showText" value="{{input.deliverIndex}}" range="{{delivers}}">
+            <view class="weui-select weui-select_in-select-after">{{seletedDeliver}}</view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!--订单信息-->
+    <view class="mt10">
+      <OrderItem :order.sync="order" action="0"></OrderItem>
+    </view>
+
+    <!--操作栏-->
+    <ActionBar @tap.user="submit" />
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import order from '../../api/order';
+  import delivery from '../../api/delivery';
+  import input from '../../mixins/input';
+  import Tips from '../../utils/Tips';
+  import Event from '../../utils/Event';
+  import Address from '../../components/common/address';
+  import ActionBar from '../../components/common/action_bar';
+  import OrderItem from '../../components/order/item';
+  import ExpressCompany from '../../components/express/company';
+  import FormTips from '../../components/weui/tips';
+
+  export default class OrderSend extends wepy.page {
+    def = {
+      order: {
+        orderGoodsInfos: []
+      },
+      address: {},
+      input: {
+        isMail: false,
+        mailNo: ''
+      },
+      init: false,
+      selectDisplay: false,
+      company: {},
+      delivers: []
+    };
+    data = {...this.def};
+    async onLoad (options) {
+      const orderId = options.orderId;
+      this.order = await order.detail(orderId);
+      this.address = this.order.receiveAddress;
+      this.delivers = await delivery.listDeliver();
+      if (this.delivers.length > 0) {
+        this.input.deliverIndex = 0;
+      }
+      this.init = true;
+      this.$apply();
+      Tips.loaded();
+    };
+    // 卸载清理
+    onUnload() {
+      Object.assign(this, this.def);
+    }
+    methods = {
+      // 提交表单
+      async submit() {
+        const orderId = this.order.orderId;
+        let expressType, expressNo, telPhone, note;
+        if (this.input.isMail) {
+          expressType = this.company.name;
+          expressNo = this.input.mailNo;
+          telPhone = this.company.tel;
+          if (this.isEmpty(expressType)) {
+            this.tips('请选择快递公司');
+            return;
+          }
+          if (this.isEmpty(expressNo)) {
+            this.tips('请填写快递单号');
+            return;
+          }
+        } else {
+          if (this.delivers.length > 0 && this.input.deliverIndex == null) {
+            this.tips('请选择配送员');
+          }
+          if (this.input.deliverIndex != null) {
+            const deliver = this.delivers[this.input.deliverIndex];
+            telPhone = deliver.phone;
+            note = deliver.name;
+            expressType = '同城配送';
+          }
+        }
+        await Tips.confirm('是否确认发货？');
+        const param = {expressType, telPhone, expressNo, note};
+        await order.send(orderId, param);
+        Event.emit(Event.ORDER_LIST_UPDATE);
+        await Tips.success('发货成功！');
+        this.$switch('index');
+      },
+      // 进入选择物流页面
+      select() {
+        this.selectDisplay = true;
+      },
+      // 物流页面返回
+      back() {
+        this.selectDisplay = false;
+      },
+      // 物流选择完毕
+      selected(company) {
+        this.selectDisplay = false;
+        this.company = company;
+        this.input.mailNo = '';
+      }
+    };
+    watch = {
+      // 无物清除信息
+      input(value) {
+        if (!value.isMail) {
+          this.company = {};
+          value.mailNo = null;
+        }
+      }
+    };
+    computed = {
+      // 计算主面板是否显示
+      panelDisplay() {
+        return this.init && !this.selectDisplay;
+      },
+      seletedDeliver() {
+        if (this.input.deliverIndex != null) {
+          return this.delivers[this.input.deliverIndex].showText;
+        } else {
+          return '请选择';
+        }
+      }
+    };
+    mixins = [input];
+    components = {
+      Address: Address,
+      OrderItem: OrderItem,
+      ActionBar: ActionBar,
+      ExpressCompany: ExpressCompany,
+      Tips: FormTips
+    };
+    config = {
+      navigationBarTitleText: '订单发货'
+    };
+  }
+</script>
+
+<style lang="scss">
+  @import "../../styles/variable";
+
+  .express-tips{
+    height: 177rpx;
+  }
+</style>
