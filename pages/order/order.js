@@ -63,7 +63,7 @@ Page({
     return {
       title: '易到开放平台-商家',
       desc: 'SAAS服务',
-      path: '/pages/index/index'
+      path: '/pages/order/order'
     }
   },
 })
