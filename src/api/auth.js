@@ -20,7 +20,8 @@ export default class auth extends base {
       password: password
     };
     const data = await this.post(url, params);
-    return data.login_code;
+    console.log(data);
+    return data;
   }
   /**
    * 短信验证码

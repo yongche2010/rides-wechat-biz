@@ -13,8 +13,9 @@ export default class http {
     };
     Tips.loading();
     const res = await wepy.request(param);
+    console.log(res);
     if (this.isSuccess(res)) {
-      return res.data.data;
+      return res.data;
     } else {
       console.error(method, url, data, res);
       throw this.requestException(res);
@@ -31,7 +32,7 @@ export default class http {
       return false;
     }
     const wxData = res.data;
-    return !(wxData && wxData.code !== 0);
+    return !(wxData && wxData.errno !== 0);
   }
 
   /**
@@ -41,12 +42,8 @@ export default class http {
     const error = {};
     error.statusCode = res.statusCode;
     const wxData = res.data;
-    const serverData = wxData.data;
-    if (serverData) {
-      error.serverCode = wxData.code;
-      error.message = serverData.message;
-      error.serverData = serverData;
-    }
+    error.serverCode = wxData.errno;
+    error.message = wxData.errmsg;
     return error;
   }
 

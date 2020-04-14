@@ -21,7 +21,7 @@
               <view class="weui-label">密码</view>
             </view>
             <view class="weui-cell__bd">
-              <input class="weui-input" type="number" name="password" maxlength="6" placeholder="请输入密码"/>
+              <input class="weui-input" type="password" name="password" placeholder="请输入密码"/>
             </view>
           </view>
         </view>
@@ -87,19 +87,20 @@
         }
         try {
           let loginCode;
+          let loginRet;
           try {
-            loginCode = await auth.login(this.input.username, this.loginMassage.password);
-          } catch (err) {
-            if (err.serverCode == 10501) {
-              loginCode = err.serverData.login_code;
-              Tips.loaded();
-              await Tips.modal('您尚未注册，将进入示例店铺');
-            } else {
-              this.tips(err.message);
+            loginRet = await auth.login(this.input.username, this.loginMassage.password);
+            if(loginRet.errno != 0) {
+              this.tips(loginRet.errmsg);
               return;
             }
+          } catch (err) {
+            this.tips(err.message);
+            return;
           }
-          await auth.setConfig('login_code', loginCode);
+          let adminInfo = loginRet.adminInfo;
+          let token = loginRet.token;
+          await auth.setConfig('login_code', token);
           await auth.removeConfig('shop_id');
           this.$redirect('shops');
         } catch (e) {
