@@ -740,7 +740,7 @@
   font-size: 20rpx;
   color: #008000;
   box-sizing: border-box;
-  background: url("https://litemall.oss-cn-shenzhen.aliyuncs.com/kefu.png") no-repeat center 21rpx;
+  background: url("https://i3.yongche.name/media/g4/M05/00/39/rBEDBF6VLqeIEJsrAADANZprFnwAACpegHEunoAAMBN454.png") no-repeat center 21rpx;
   background-size: 55rpx auto;
 }
 

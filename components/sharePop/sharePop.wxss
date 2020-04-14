@@ -43,7 +43,7 @@
 .share-pop .share-touser {
  height: 160rpx;
  width: 160rpx;
- background: url("https://litemall-1256968571.file.myqcloud.com/icon/%E5%88%86%E4%BA%AB_%E5%BE%AE%E4%BF%A1.png") no-repeat center 1rpx;
+ background: url("https://i2.yongche.name/media/g4/M05/00/39/rBEDBF6VLsKIBCaxAAAjiL8X-6QAACpegHFescAACOg752.png") no-repeat center 1rpx;
  background-size: 160rpx auto;
  border-radius: 80rpx;
 }
@@ -51,7 +51,7 @@
 .share-pop .share-friend {
  height: 160rpx;
  width: 160rpx;
- background: url("https://litemall-1256968571.file.myqcloud.com/icon/%E5%88%86%E4%BA%AB_%E5%BE%AE%E4%BF%A1%E6%9C%8B%E5%8F%8B%E5%9C%88.png") no-repeat center 1rpx;
+ background: url("https://i2.yongche.name/media/g3/M04/06/32/rBEDAl6VLtSIEla_AAAqeXfgZn4AACpdwEdy7IAACqR843.png") no-repeat center 1rpx;
  background-size: 160rpx auto;
  border-radius: 10rpx;
 }
