@@ -8,3 +8,4 @@ dist/*
 /.wepyignore
 /package-lock.json
 /src/ext.json
+.DS_Store
