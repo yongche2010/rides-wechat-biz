@@ -57,5 +57,13 @@ Page({
     wx.navigateTo({
       url: `/pages/orderDetail/orderDetail?orderId=${e.detail.orderId}`
     })
-  } 
+  },
+
+  onShareAppMessage: function() {
+    return {
+      title: '易到开放平台-商家',
+      desc: 'SAAS服务',
+      path: '/pages/index/index'
+    }
+  },
 })
