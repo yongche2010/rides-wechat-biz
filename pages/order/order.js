@@ -3,6 +3,7 @@ import Tab from '../../components/tab/index'
 Page({
   data: {
     activeIndex:0,
+    getOrder: [],
     tabData: {
       scrollHeight:0,
       selectedId: 1,

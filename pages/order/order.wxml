@@ -8,7 +8,7 @@
       </scroll-view>
     </swiper-item>
     <swiper-item >
-      <no-order></no-order>
+      <no-order item="{{getOrder.length}}"></no-order>
     </swiper-item>
     <swiper-item >3</swiper-item>
     <swiper-item >4</swiper-item>
